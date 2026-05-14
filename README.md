@@ -32,4 +32,4 @@ Open `index.html` in any browser. No build step required.
 
 ## Author
 
-[miftahafina](https://github.com/miftahafina)
+[Miftah Afina](https://github.com/miftahafina)
