@@ -57,11 +57,12 @@ function detectLanguage(text) {
 }
 
 function updateLanguage(lang) {
+  if (!originalModel) return;
+
   currentLang = lang;
   langSelect.value = lang;
 
-  const token = originalModel.getLanguageId() !== lang ? 1 : 0;
-  if (token) {
+  if (originalModel.getLanguageId() !== lang) {
     monaco.editor.setModelLanguage(originalModel, lang);
     monaco.editor.setModelLanguage(modifiedModel, lang);
   }
@@ -153,8 +154,7 @@ function restoreTheme() {
     applyTheme();
   } else {
     isDark = false;
-    document.documentElement.setAttribute('data-theme', 'light');
-    monaco.editor.setTheme('vs');
+    applyTheme();
   }
 }
 
