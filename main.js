@@ -28,11 +28,15 @@ let currentLang = 'javascript';
 const debounceTimers = {};
 const MOBILE_BREAKPOINT = 768;
 const mobileMq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+const STORAGE_ORIGINAL = 'diff-checker-original';
+const STORAGE_MODIFIED = 'diff-checker-modified';
+const STORAGE_TAB = 'diff-checker-tab';
 
 const $ = (sel) => document.querySelector(sel);
 const langSelect = $('#lang-select');
 const autoDetectCheckbox = $('#auto-detect');
 const themeToggle = $('#theme-toggle');
+const clearBtn = $('#clear-btn');
 
 function populateLanguages() {
   const fragment = document.createDocumentFragment();
@@ -83,6 +87,22 @@ function handleContentChange() {
   }
 }
 
+function saveContent() {
+  if (!originalModel || !modifiedModel) return;
+  localStorage.setItem(STORAGE_ORIGINAL, originalModel.getValue());
+  localStorage.setItem(STORAGE_MODIFIED, modifiedModel.getValue());
+}
+
+const DEFAULT_ORIGINAL = '// original code\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\nconsole.log(greet("World"));\n';
+const DEFAULT_MODIFIED = '// modified code\nfunction greet(name, greeting = "Hello") {\n  return `${greeting}, ${name}!`;\n}\n\nconsole.log(greet("World"));\nconsole.log(greet("World", "Hi"));\n';
+
+function loadContent() {
+  return {
+    original: localStorage.getItem(STORAGE_ORIGINAL) ?? DEFAULT_ORIGINAL,
+    modified: localStorage.getItem(STORAGE_MODIFIED) ?? DEFAULT_MODIFIED,
+  };
+}
+
 function debounce(fn, delay, key) {
   clearTimeout(debounceTimers[key]);
   debounceTimers[key] = setTimeout(fn, delay);
@@ -98,22 +118,19 @@ function init() {
   require(['vs/editor/editor.main'], () => {
     document.querySelectorAll('.monaco-editor').forEach((el) => el.remove());
 
-    originalModel = monaco.editor.createModel(
-      '// original code\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\nconsole.log(greet("World"));\n',
-      currentLang
-    );
+    const saved = loadContent();
 
-    modifiedModel = monaco.editor.createModel(
-      '// modified code\nfunction greet(name, greeting = "Hello") {\n  return `${greeting}, ${name}!`;\n}\n\nconsole.log(greet("World"));\nconsole.log(greet("World", "Hi"));\n',
-      currentLang
-    );
+    originalModel = monaco.editor.createModel(saved.original, currentLang);
+    modifiedModel = monaco.editor.createModel(saved.modified, currentLang);
 
     originalModel.onDidChangeContent(() => {
       debounce(handleContentChange, 300, 'autoDetect');
+      debounce(saveContent, 500, 'save');
     });
 
     modifiedModel.onDidChangeContent(() => {
       debounce(handleContentChange, 300, 'autoDetect');
+      debounce(saveContent, 500, 'save');
     });
 
     setupEditors();
@@ -138,6 +155,14 @@ autoDetectCheckbox.addEventListener('change', () => {
 themeToggle.addEventListener('click', () => {
   isDark = !isDark;
   applyTheme();
+});
+
+clearBtn.addEventListener('click', () => {
+  if (!originalModel || !modifiedModel) return;
+  originalModel.setValue('');
+  modifiedModel.setValue('');
+  localStorage.removeItem(STORAGE_ORIGINAL);
+  localStorage.removeItem(STORAGE_MODIFIED);
 });
 
 function applyTheme() {
@@ -210,7 +235,9 @@ function createMobileEditor() {
     theme: isDark ? 'vs-dark' : 'vs',
   });
 
-  setActiveTab('before');
+  const savedTab = localStorage.getItem(STORAGE_TAB) || 'before';
+  setActiveTab(savedTab);
+  mobileEditor.setModel(savedTab === 'before' ? originalModel : modifiedModel);
 }
 
 function onBreakpointChange(e) {
@@ -246,6 +273,7 @@ document.addEventListener('click', (e) => {
     const tab = tabBtn.dataset.tab;
     setActiveTab(tab);
     mobileEditor.setModel(tab === 'before' ? originalModel : modifiedModel);
+    localStorage.setItem(STORAGE_TAB, tab);
   }
 });
 
