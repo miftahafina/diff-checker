@@ -18,12 +18,16 @@ const LANGUAGES = [
 ];
 
 let diffEditor;
+let mobileEditor;
 let originalModel;
 let modifiedModel;
 let isDark = false;
+let isMobileLayout = false;
 let autoDetectEnabled = true;
 let currentLang = 'javascript';
 const debounceTimers = {};
+const MOBILE_BREAKPOINT = 768;
+const mobileMq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
 
 const $ = (sel) => document.querySelector(sel);
 const langSelect = $('#lang-select');
@@ -103,32 +107,6 @@ function init() {
       currentLang
     );
 
-    const editorEl = document.getElementById('diff-editor');
-
-    diffEditor = monaco.editor.createDiffEditor(editorEl, {
-      enableSplitViewResizing: true,
-      renderSideBySide: true,
-      originalEditable: true,
-      automaticLayout: true,
-      minimap: { enabled: false },
-      fontSize: 14,
-      lineNumbers: 'on',
-      scrollBeyondLastLine: false,
-      wordWrap: 'on',
-      renderIndicators: true,
-      diffCodeLens: true,
-      ignoreTrimWhitespace: false,
-      renderOverviewRuler: true,
-      overviewRulerLanes: 3,
-      diffAlgorithm: 'advanced',
-      theme: 'vs',
-    });
-
-    diffEditor.setModel({
-      original: originalModel,
-      modified: modifiedModel,
-    });
-
     originalModel.onDidChangeContent(() => {
       debounce(handleContentChange, 300, 'autoDetect');
     });
@@ -137,6 +115,7 @@ function init() {
       debounce(handleContentChange, 300, 'autoDetect');
     });
 
+    setupEditors();
     restoreTheme();
   });
 }
@@ -178,5 +157,96 @@ function restoreTheme() {
     monaco.editor.setTheme('vs');
   }
 }
+
+function setupEditors() {
+  isMobileLayout = mobileMq.matches;
+
+  if (isMobileLayout) {
+    createMobileEditor();
+  } else {
+    createDiffEditor();
+  }
+
+  mobileMq.addEventListener('change', onBreakpointChange);
+}
+
+function createDiffEditor() {
+  const editorEl = document.getElementById('diff-editor');
+  diffEditor = monaco.editor.createDiffEditor(editorEl, {
+    enableSplitViewResizing: true,
+    renderSideBySide: true,
+    originalEditable: true,
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontSize: 14,
+    lineNumbers: 'on',
+    scrollBeyondLastLine: false,
+    wordWrap: 'on',
+    renderIndicators: true,
+    diffCodeLens: true,
+    ignoreTrimWhitespace: false,
+    renderOverviewRuler: true,
+    overviewRulerLanes: 3,
+    diffAlgorithm: 'advanced',
+    theme: isDark ? 'vs-dark' : 'vs',
+  });
+
+  diffEditor.setModel({
+    original: originalModel,
+    modified: modifiedModel,
+  });
+}
+
+function createMobileEditor() {
+  const editorEl = document.getElementById('diff-editor');
+  mobileEditor = monaco.editor.create(editorEl, {
+    model: originalModel,
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontSize: 14,
+    lineNumbers: 'on',
+    scrollBeyondLastLine: false,
+    wordWrap: 'on',
+    theme: isDark ? 'vs-dark' : 'vs',
+  });
+
+  setActiveTab('before');
+}
+
+function onBreakpointChange(e) {
+  const shouldBeMobile = e.matches;
+  if (shouldBeMobile === isMobileLayout) return;
+  isMobileLayout = shouldBeMobile;
+
+  if (diffEditor) {
+    diffEditor.dispose();
+    diffEditor = null;
+  }
+  if (mobileEditor) {
+    mobileEditor.dispose();
+    mobileEditor = null;
+  }
+
+  if (isMobileLayout) {
+    createMobileEditor();
+  } else {
+    createDiffEditor();
+  }
+}
+
+function setActiveTab(tab) {
+  document.querySelectorAll('.mobile-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+}
+
+document.addEventListener('click', (e) => {
+  const tabBtn = e.target.closest('.mobile-tab');
+  if (tabBtn && mobileEditor) {
+    const tab = tabBtn.dataset.tab;
+    setActiveTab(tab);
+    mobileEditor.setModel(tab === 'before' ? originalModel : modifiedModel);
+  }
+});
 
 document.addEventListener('DOMContentLoaded', init);
