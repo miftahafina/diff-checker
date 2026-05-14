@@ -47,6 +47,11 @@ body {
   overflow: hidden;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -112,20 +117,21 @@ body {
   accent-color: var(--accent-color);
 }
 
-.theme-btn {
+.toolbar-btn {
   background: none;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 4px 8px;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
+  font-size: 13px;
+  line-height: 1.4;
   display: flex;
   align-items: center;
+  color: var(--text-primary);
   transition: background 0.15s;
 }
 
-.theme-btn:hover {
+.toolbar-btn:hover {
   background: var(--hover-bg);
 }
 
@@ -139,7 +145,8 @@ body {
 .main-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 48px);
+  flex: 1;
+  min-height: 0;
 }
 
 .panel-header {
@@ -202,6 +209,20 @@ body {
   .panel-header {
     display: none;
   }
+}
+
+.editor-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 44px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .diff-editor {
