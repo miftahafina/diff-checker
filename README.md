@@ -1,6 +1,6 @@
 # Diff Checker
 
-A side-by-side code comparison tool powered by [Monaco Editor](https://microsoft.github.io/monaco-editor/). No build step, no dependencies — just open and use.
+A side-by-side code comparison tool powered by [Monaco Editor](https://microsoft.github.io/monaco-editor/).
 
 ## Features
 
@@ -12,22 +12,23 @@ A side-by-side code comparison tool powered by [Monaco Editor](https://microsoft
 
 ## Usage
 
-Open `index.html` in any browser:
-
 ```bash
-open index.html
+npm install
+npm run dev
 ```
 
-Or serve locally:
+Build for production:
 
 ```bash
-npx serve .
+npm run build
+npm run preview
 ```
 
 ## Tech Stack
 
-- [Monaco Editor](https://microsoft.github.io/monaco-editor/) v0.45 — CDN-loaded
-- Vanilla JavaScript — zero framework, zero build tools
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/) — bundled via Vite
+- [Vite](https://vitejs.dev/) — dev server & build
+- Vanilla JavaScript — zero framework
 - CSS Custom Properties — theming via `[data-theme]`
 - `localStorage` — content & theme persistence
 

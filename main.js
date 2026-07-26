@@ -1,3 +1,5 @@
+import * as monaco from 'monaco-editor';
+
 const LANGUAGES = [
   { id: 'javascript', label: 'JavaScript' }, { id: 'typescript', label: 'TypeScript' },
   { id: 'python', label: 'Python' }, { id: 'html', label: 'HTML' },
@@ -60,27 +62,24 @@ sel.addEventListener('change', () => {
   monaco.editor.setModelLanguage(modModel, lang);
 });
 
-require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
-require(['vs/editor/editor.main'], () => {
-  const lang = sel.value;
-  origModel = monaco.editor.createModel(localStorage.getItem('dc-original') ?? DEFAULTS.original, lang);
-  modModel = monaco.editor.createModel(localStorage.getItem('dc-modified') ?? DEFAULTS.modified, lang);
+const lang = sel.value;
+origModel = monaco.editor.createModel(localStorage.getItem('dc-original') ?? DEFAULTS.original, lang);
+modModel = monaco.editor.createModel(localStorage.getItem('dc-modified') ?? DEFAULTS.modified, lang);
 
-  origModel.onDidChangeContent(save);
-  modModel.onDidChangeContent(save);
+origModel.onDidChangeContent(save);
+modModel.onDidChangeContent(save);
 
-  editor = monaco.editor.createDiffEditor(document.getElementById('diff-editor'), {
-    enableSplitViewResizing: true,
-    renderSideBySide: true,
-    originalEditable: true,
-    automaticLayout: true,
-    minimap: { enabled: false },
-    fontSize: 14,
-    wordWrap: 'on',
-    scrollBeyondLastLine: false,
-    diffAlgorithm: 'advanced',
-  });
-
-  editor.setModel({ original: origModel, modified: modModel });
-  restoreTheme();
+editor = monaco.editor.createDiffEditor(document.getElementById('diff-editor'), {
+  enableSplitViewResizing: true,
+  renderSideBySide: true,
+  originalEditable: true,
+  automaticLayout: true,
+  minimap: { enabled: false },
+  fontSize: 14,
+  wordWrap: 'on',
+  scrollBeyondLastLine: false,
+  diffAlgorithm: 'advanced',
 });
+
+editor.setModel({ original: origModel, modified: modModel });
+restoreTheme();
